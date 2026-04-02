@@ -506,12 +506,12 @@ local     my-volume
 
 milky99259753@c5r2s3 docker-nginx % docker run -it -v my-volume:/data ubuntu bash # 볼륨을 연결한 컨테이너 실행
 
-root@edcb2216eb65:/# echo "hello volume" > /data/test.txt # 컨테이너에서 파일 생성
+root@edcb2216eb65: echo "hello volume" > /data/test.txt # 컨테이너에서 파일 생성
 
-root@edcb2216eb65:/# cat /data/test.txt  # 파일 내용 확인
+root@edcb2216eb65: cat /data/test.txt  # 파일 내용 확인
 hello volume
 
-root@edcb2216eb65:/# exit #컨테이너 종료
+root@edcb2216eb65: exit #컨테이너 종료
 exit
 
 milky99259753@c5r2s3 docker-nginx % docker ps -a 컨테이너 종료 확인
@@ -541,7 +541,7 @@ b70553be49f8   hello-world   "/hello"                  26 hours ago   Exited (0)
 
 milky99259753@c5r2s3 docker-nginx % docker run -it -v my-volume:/data ubuntu bash  # 컨테이너 재실행
 
-root@d8a5f7f0b651:/# cat /data/test.txt # 볼륨 영속성 검증
+root@d8a5f7f0b651: cat /data/test.txt # 볼륨 영속성 검증
 hello volume # 정상 출력
 ```
 Docker volume은 컨테이너 삭제와 관계없이 데이터를 유지하기 위해 사용한다.
@@ -594,4 +594,13 @@ branch.main.merge=refs/heads/main
 ```
 ---
 
+### 10. 트러블슈팅
 
+1. docker ps 시 원하는 컨테이너 목록이 표시되지 않아 당황했다.
+   ps 가 Process Status의 약자라고 해서, 모든 컨테이너 목록이 나오는 건줄 알았는데, 실행중인 컨테이너 목록만 조회하는 명령어였던 것이다.
+
+   해결 방안 : docker ps -a
+
+2. README.md를 vim으로만 작성하고 있었는데, 가독성도 너무 떨어지고 이미지 첨부에  어려움이 있었다.
+
+   해결 방안 : `code .` 명령어를 통해 vs코드를 실행해 작업했다.
