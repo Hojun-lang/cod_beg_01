@@ -1,16 +1,25 @@
-## 1) 실행 환경
+## 개요
+터미널, Docker, Git을 활용하여
+재현 가능한 개발 워크스테이션을 구축하는 것을 목표로 한다.
 
+## 1) 실행 환경
+- OS: macOS
+- Shell: zsh
+- Terminal: 기본 macOS Terminal
+- Docker: 28.5.2
+- Container Runtime: OrbStack
+- Git: version 2.53.0
 
 ## 2) 수행 체크리스트
 1. [x] 터미널 기본 조작 및 폴더 구성
 2. [x] 권한 변경 실습
-3. [] Docker 설치/점검
-4. [] hello-world 실행
-5. [] Dockerfile 빌드/실행
-6. [] 포트 매핑 접속(2회)
-7. [] 바인드 마운트 반영
-8. [] 볼륨 영속성
-9. [] Git 설정 + VSCode GitHub 연동
+3. [x] Docker 설치/점검
+4. [x] hello-world 실행
+5. [x] Dockerfile 빌드/실행
+6. [x] 포트 매핑 접속(2회)
+7. [x] 바인드 마운트 반영
+8. [x] 볼륨 영속성
+9. [x] Git 설정 + VSCode/GitHub 연동
 
  ## 3) 수행 로그(발췌)
 
@@ -303,6 +312,9 @@ Server:
 
 WARNING: DOCKER_INSECURE_NO_IPTABLES_RAW is set
 ```
+기존 nginx 이미지를 재사용하여 웹 서버를 직접 구축하지 않고,
+정적 콘텐츠만 교체하는 방식으로 빠르게 커스터마이징을 수행했다.
+
 ---
 ### 4. Docker 기본 운영 명령 수행
 ```bash
@@ -532,3 +544,54 @@ milky99259753@c5r2s3 docker-nginx % docker run -it -v my-volume:/data ubuntu bas
 root@d8a5f7f0b651:/# cat /data/test.txt # 볼륨 영속성 검증
 hello volume # 정상 출력
 ```
+Docker volume은 컨테이너 삭제와 관계없이 데이터를 유지하기 위해 사용한다.
+컨테이너는 휘발성이기 때문에 별도의 저장소가 필요하다.
+
+---
+### 8. 바인드 마운트 테스트
+```bash
+milky99259753@c5r2s3 docker-nginx % mkdir bind-test # 테스트용 디렉토리 생성
+milky99259753@c5r2s3 docker-nginx % echo "before" > bind-test/test.txt # 테스트용 파일 생성
+
+milky99259753@c5r2s3 docker-nginx % cd bind-test 
+
+milky99259753@c5r2s3 bind-test % cat test.txt # 파일 확인
+before
+
+milky99259753@c5r2s3 bind-test % docker run -it -v $(pwd)/bind-test:/data ubuntu bash # 컨테이너 실행
+root@21fb58e3248d:/# cat /data/test.txt # 테스트 파일 확인
+cat: /data/test.txt: No such file or directory # 비어있음
+
+root@dfff583021f6:/# echo "after" > /data/test.txt # 테스트 파일 수정
+root@dfff583021f6:/# exit
+exit
+
+milky99259753@c5r2s3 bind-test % cat bind-test/test.txt # 호스트에서 재확인
+after # 변경됨
+```
+- 컨테이너에서 파일 수정 → 호스트에 즉시 반영됨
+- 바인드 마운트는 호스트 디렉토리와 컨테이너를 직접 연결한다.
+- 실시간 파일 공유가 가능하다.
+
+---
+### 9. GitHub 연동 검증
+```bash 
+milky99259753@c5r2s3 cod_beg_01 % git config --list
+credential.helper=osxkeychain
+user.name=Hojun-lang
+user.email=milky9925@gmail.com
+init.defaultbranch=main
+core.repositoryformatversion=0
+core.filemode=true
+core.bare=false
+core.logallrefupdates=true
+core.ignorecase=true
+core.precomposeunicode=true
+remote.origin.url=https://github.com/Hojun-lang/cod_beg_01.git
+remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
+branch.main.remote=origin
+branch.main.merge=refs/heads/main
+```
+---
+
+
