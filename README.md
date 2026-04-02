@@ -421,4 +421,114 @@ exit
 - `attatch`는 한 프로세스를 공유해서 쓰고, `exec`는 개별적으로 동작된다. 그러나 컨테이너가 종료되면 같이 종료된다.
 ---
 
-### 6. 
+### 6. 커스텀 이미지 제작 후 컨테이너 실행
+
+```bash
+milky99259753@c5r2s3 cod_beg_01 % mkdir docker-nginx # 디렉토리 생성
+
+milky99259753@c5r2s3 cod_beg_01 % cd docker-nginx 
+
+milky99259753@c5r2s3 docker-nginx % echo "<h1>Hello Docker Custom</h1>" > index.html 
+
+milky99259753@c5r2s3 docker-nginx % vim Dockerfile # Dockerfile 작성
+
+milky99259753@c5r2s3 docker-nginx % cat Dockerfile # 작성 잘 됐나 확인
+FROM nginx:latest
+
+COPY index.html /usr/share/nginx/html/index.html
+
+milky99259753@c5r2s3 docker-nginx % docker build -t my-nginx . # 이미지 빌드
+.
+.
+.
+
+milky99259753@c5r2s3 docker-nginx % docker run -d -p 8080:80 my-nginx # 컨테이너 실행
+c3bdf28f643ddef244abbc657d8f05b5673b4a5c5ec1e61f7dde3f0c48502d76
+
+milky99259753@c5r2s3 docker-nginx % docker ps # 실행한 컨테이너 확인
+CONTAINER ID   IMAGE      COMMAND                   CREATED          STATUS          PORTS                                     NAMES
+c3bdf28f643d   my-nginx   "/docker-entrypoint.…"   13 seconds ago   Up 13 seconds   0.0.0.0:8080->80/tcp, [::]:8080->80/tcp   quirky_feynman
+
+milky99259753@c5r2s3 docker-nginx % curl http://localhost:8080 # curl 요청 보내보기       
+<h1>Hello Docker Custom</h1> # 정상 출력됨
+
+milky99259753@c5r2s3 docker-nginx % docker logs c3bdf28f643d # 로그 확인
+/docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+/docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+10-listen-on-ipv6-by-default.sh: info: Getting the checksum of /etc/nginx/conf.d/default.conf
+10-listen-on-ipv6-by-default.sh: info: Enabled listen on IPv6 in /etc/nginx/conf.d/default.conf
+/docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+/docker-entrypoint.sh: Configuration complete; ready for start up
+2026/04/01 13:28:42 [notice] 1#1: using the "epoll" event method
+2026/04/01 13:28:42 [notice] 1#1: nginx/1.29.7
+2026/04/01 13:28:42 [notice] 1#1: built by gcc 14.2.0 (Debian 14.2.0-19) 
+2026/04/01 13:28:42 [notice] 1#1: OS: Linux 6.17.8-orbstack-00308-g8f9c941121b1
+2026/04/01 13:28:42 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 20480:1048576
+2026/04/01 13:28:42 [notice] 1#1: start worker processes
+2026/04/01 13:28:42 [notice] 1#1: start worker process 29
+2026/04/01 13:28:42 [notice] 1#1: start worker process 30
+2026/04/01 13:28:42 [notice] 1#1: start worker process 31
+2026/04/01 13:28:42 [notice] 1#1: start worker process 32
+2026/04/01 13:28:42 [notice] 1#1: start worker process 33
+2026/04/01 13:28:42 [notice] 1#1: start worker process 34
+192.168.215.1 - - [01/Apr/2026:13:29:22 +0000] "GET / HTTP/1.1" 200 29 "-" "curl/8.7.1" "-"
+192.168.215.1 - - [01/Apr/2026:13:29:37 +0000] "GET / HTTP/1.1" 200 29 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15" "-"
+192.168.215.1 - - [01/Apr/2026:13:29:37 +0000] "GET /favicon.ico HTTP/1.1" 404 153 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15" "-"
+2026/04/01 13:29:37 [error] 30#30: *2 open() "/usr/share/nginx/html/favicon.ico" failed (2: No such file or directory), client: 192.168.215.1, server: localhost, request: "GET /favicon.ico HTTP/1.1", host: "localhost:8080", referrer: "http://localhost:8080/"
+```
+#### 웹사이트에서 검증하기(참고 이미지)
+![alt text](image-5.png)
+---
+
+### 7. Docker 볼륨 영속성 검증
+```bash
+milky99259753@c5r2s3 docker-nginx % docker volume create my-volume # 볼륨 생성
+my-volume
+
+milky99259753@c5r2s3 docker-nginx % docker volume ls # 볼륨 목록 확인
+DRIVER    VOLUME NAME
+local     my-volume
+
+milky99259753@c5r2s3 docker-nginx % docker run -it -v my-volume:/data ubuntu bash # 볼륨을 연결한 컨테이너 실행
+
+root@edcb2216eb65:/# echo "hello volume" > /data/test.txt # 컨테이너에서 파일 생성
+
+root@edcb2216eb65:/# cat /data/test.txt  # 파일 내용 확인
+hello volume
+
+root@edcb2216eb65:/# exit #컨테이너 종료
+exit
+
+milky99259753@c5r2s3 docker-nginx % docker ps -a 컨테이너 종료 확인
+CONTAINER ID   IMAGE         COMMAND                   CREATED              STATUS                      PORTS                                     NAMES
+edcb2216eb65   ubuntu        "bash"                    About a minute ago   Exited (0) 17 seconds ago                                             funny_williams
+c3bdf28f643d   my-nginx      "/docker-entrypoint.…"   22 hours ago         Up 22 hours                 0.0.0.0:8080->80/tcp, [::]:8080->80/tcp   quirky_feynman
+8eb015401c34   ubuntu        "bash"                    25 hours ago         Exited (0) 25 hours ago                                               reverent_goldstine
+5ff4bd214278   ubuntu        "bash"                    26 hours ago         Exited (0) 25 hours ago                                               youthful_thompson
+888ecf9e66d9   ubuntu        "bash"                    26 hours ago         Exited (0) 26 hours ago                                               youthful_meninsky
+8e59470850a0   ubuntu        "bash"                    26 hours ago         Exited (0) 26 hours ago                                               relaxed_keller
+0d1847bea8e2   ubuntu        "bash"                    26 hours ago         Exited (0) 26 hours ago                                               exciting_heisenberg
+b6baa04e3741   ubuntu        "bash"                    26 hours ago         Exited (0) 26 hours ago                                               musing_dewdney
+b70553be49f8   hello-world   "/hello"                  26 hours ago         Exited (0) 26 hours ago                                               silly_kepler
+
+milky99259753@c5r2s3 docker-nginx % docker rm edcb2216eb65 # 컨테이너 삭제
+edcb2216eb65
+milky99259753@c5r2s3 docker-nginx % docker ps -a # 컨테이너 삭제 확인
+CONTAINER ID   IMAGE         COMMAND                   CREATED        STATUS                    PORTS                                     NAMES
+c3bdf28f643d   my-nginx      "/docker-entrypoint.…"   22 hours ago   Up 22 hours               0.0.0.0:8080->80/tcp, [::]:8080->80/tcp   quirky_feynman
+8eb015401c34   ubuntu        "bash"                    25 hours ago   Exited (0) 25 hours ago                                             reverent_goldstine
+5ff4bd214278   ubuntu        "bash"                    26 hours ago   Exited (0) 25 hours ago                                             youthful_thompson
+888ecf9e66d9   ubuntu        "bash"                    26 hours ago   Exited (0) 26 hours ago                                             youthful_meninsky
+8e59470850a0   ubuntu        "bash"                    26 hours ago   Exited (0) 26 hours ago                                             relaxed_keller
+0d1847bea8e2   ubuntu        "bash"                    26 hours ago   Exited (0) 26 hours ago                                             exciting_heisenberg
+b6baa04e3741   ubuntu        "bash"                    26 hours ago   Exited (0) 26 hours ago                                             musing_dewdney
+b70553be49f8   hello-world   "/hello"                  26 hours ago   Exited (0) 26 hours ago                                             silly_kepler
+
+milky99259753@c5r2s3 docker-nginx % docker run -it -v my-volume:/data ubuntu bash  # 컨테이너 재실행
+
+root@d8a5f7f0b651:/# cat /data/test.txt # 볼륨 영속성 검증
+hello volume # 정상 출력
+```
